@@ -1,0 +1,4 @@
+services:
+  - docker
+script:
+  - docker-compose build tester && docker-compose run --rm tester go test ./...; docker-compose down

@@ -1,0 +1,10 @@
+FROM golang:1.19.6-alpine3.17
+
+WORKDIR /code
+RUN apk --no-cache add gcc git musl-dev openssh
+
+COPY go.mod go.sum ./
+
+RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.51.1
+
+COPY . /code
