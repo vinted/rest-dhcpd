@@ -24,15 +24,15 @@ Global server configuration is stored in `rest-dhcpd-config.json` file:
     }
 }
 ```
-`IP` - IP address of DHCP server.
-`LeaseDuration` - DHCP lease duration in seconds.
-`AuthToken` - authentication token for REST interface.
-`ListenInterface` - network interface to listen fro DHCP requests.
-`HTTPListenAddress` - address to listen fro HTTP requests. To listen on all network addresses use port without any IP address `:6767`.
-`TLSEndabled` - start REST interface with HTTPS support.
-`TLSPrivateKeyFile` - private key file for HTTPS support.
-`TLSCertificateFile` - certificate file for HTTPS support.
-`Options` - list of global DHCP options. Can be overridden by client config.
+`IP` - IP address of DHCP server.  
+`LeaseDuration` - DHCP lease duration in seconds.  
+`AuthToken` - authentication token for REST interface.  
+`ListenInterface` - network interface to listen fro DHCP requests.  
+`HTTPListenAddress` - address to listen fro HTTP requests. To listen on all network addresses use port without any IP address `:6767`.  
+`TLSEndabled` - start REST interface with HTTPS support.  
+`TLSPrivateKeyFile` - private key file for HTTPS support.  
+`TLSCertificateFile` - certificate file for HTTPS support.  
+`Options` - list of global DHCP options. Can be overridden by client config.  
 
 ### Basics
 REST DHCP server does not provide dynamic DHCP leases. It only provides leases to configured clients.
@@ -45,12 +45,12 @@ REST API supports following methods:
 
 ### API endpoints
 
-`/` - supports `GET` method. Displays index page.
-`/clients` - supports `GET` method. Lists all configured clients.
-`/client/AA:BB:CC:DD:EE:FF` - supports:
-		- `GET` - displays configuration of a client defined by `AA:BB:CC:DD:EE:FF` `MAC` address.
-		- `DELETE` - deletes configuration of a client defined by `AA:BB:CC:DD:EE:FF` `MAC` address.
-		- `PUT` -  creates new or update existing configuration of a client defined by `AA:BB:CC:DD:EE:FF` `MAC` address.
+`/` - supports `GET` method. Displays index page.  
+`/clients` - supports `GET` method. Lists all configured clients.  
+`/client/AA:BB:CC:DD:EE:FF` - supports:  
+		- `GET` - displays configuration of a client defined by `AA:BB:CC:DD:EE:FF` `MAC` address.  
+		- `DELETE` - deletes configuration of a client defined by `AA:BB:CC:DD:EE:FF` `MAC` address.  
+		- `PUT` -  creates new or update existing configuration of a client defined by `AA:BB:CC:DD:EE:FF` `MAC` address.  
 
 ### Examples
 
