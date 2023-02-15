@@ -1,0 +1,15 @@
+{
+    "IP": "192.168.100.1",
+    "LeaseDuration": 30,
+    "AuthToken": "secretToken",
+    "ListenInterface": "virbr1",
+    "HTTPListenAddress": "127.0.0.1:6767",
+    "TLSEnabled": true,
+    "TLSPrivateKeyFile": "example.key",
+    "TLSCertificateFile": "example.crt",
+    "Options": {
+      "1": "255.255.255.0",
+      "3": "192.168.100.1",
+      "6": "10.32.0.3"
+    }
+}

@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  tester:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ~/.ssh:/root/.ssh:ro
+    command: >
+      sh -c "set -o pipefail &&
+             go mod download &&
+             ./bin/golangci-lint run -v &&
+             go test ./..."
