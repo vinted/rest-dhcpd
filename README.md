@@ -72,6 +72,6 @@ curl -X DELETE http://127.0.0.1:6767/client/aa:bb:cc:dd:ee:ff -H "REST-DHCPD-Aut
 ```
 
 #### HTTP return codes
-`200` - OK. Request was completed successfully.
-`400` - BadRequest. Reports that configuration cannot be added or updated. HTTP body will display more detailed information about error.
-`401` - Unauthorized.  `REST-DHCPD-Auth-Token` provided by client does not mach token in configuration.
+`200` - OK. Request was completed successfully.  
+`400` - BadRequest. Reports that configuration cannot be added or updated. HTTP body will display more detailed information about error.  
+`401` - Unauthorized.  `REST-DHCPD-Auth-Token` provided by client does not mach token in configuration.  
