@@ -40,9 +40,17 @@ var DB *Clients
 var Config *GlobalOptions
 
 func Init(configPath string) error {
-	content, err := os.ReadFile(path.Join(configPath, "rest-dhcpd-clients.json"))
-	if err != nil {
-		return err
+	content := []byte(`{}`)
+	dataFile := path.Join(configPath, "rest-dhcpd-clients.json")
+	_, err := os.Stat(dataFile)
+	if !os.IsNotExist(err) {
+		content, err = os.ReadFile(dataFile)
+		if err != nil {
+			return err
+		}
+	}
+	if len(content) == 0 {
+		content = []byte(`{}`)
 	}
 	err = json.Unmarshal(content, &DB)
 	if err != nil {
