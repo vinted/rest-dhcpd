@@ -7,7 +7,6 @@ import (
 	"github.com/vinted/rest-dhcpd/pkg/configdb"
 	"log"
 	"net/http"
-	//"sync"
 )
 
 func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
