@@ -9,6 +9,7 @@ import (
 	"github.com/vinted/rest-dhcpd/pkg/rest"
 	"log"
 	"net"
+	"reflect"
 	"strconv"
 	"time"
 )
@@ -55,7 +56,13 @@ func BuildOptions(options interface{}) dhcp.Options {
 		var val []byte
 		id, _ := strconv.Atoi(key)
 		if data_type[id] == "IP" {
-			val = []byte(net.ParseIP(fmt.Sprint(value)).To4())
+			if reflect.ValueOf(value).Kind() == reflect.Slice {
+				for _, ip := range value.([]interface{}) {
+					val = append(val, []byte(net.ParseIP(fmt.Sprint(ip)).To4())...)
+				}
+			} else {
+				val = []byte(net.ParseIP(fmt.Sprint(value)).To4())
+			}
 		} else {
 			val = []byte(fmt.Sprint(value))
 		}
