@@ -113,6 +113,9 @@ func addClientConfig(config configdb.Client) {
 	log.Printf("Adding client config for: %s\n", config.MAC)
 	m := configdb.Mu{}
 	m.Mu.Lock()
+	if config.Options == nil {
+		config.Options = make(map[string]interface{})
+	}
 	configdb.DB.Clients = append(configdb.DB.Clients, config)
 	m.Mu.Unlock()
 	err := m.Save()
@@ -125,6 +128,9 @@ func updateClientConfig(id int, config configdb.Client) {
 	log.Printf("Updating client config for: %s\n", config.MAC)
 	m := configdb.Mu{}
 	m.Mu.Lock()
+	if config.Options == nil {
+		config.Options = make(map[string]interface{})
+	}
 	configdb.DB.Clients[id].IP = config.IP
 	configdb.DB.Clients[id].Hostname = config.Hostname
 	configdb.DB.Clients[id].Options = config.Options

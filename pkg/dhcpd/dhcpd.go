@@ -72,7 +72,7 @@ func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options
 		client, id := rest.SearchForClientByMac(p.CHAddr().String())
 		if id != -1 { // If client exists in configdb, send a DHCPOFFER
 			h.options = lo.Assign(h.options, BuildOptions(client.Options)) // Merge global and client DHCP options
-			h.options[dhcp.OptionHostName] = []byte(client.Hostname) // Set hostname via DHCP options
+			h.options[dhcp.OptionHostName] = []byte(client.Hostname)       // Set hostname via DHCP options
 			log.Printf("Sending DHCPOFFER to %s with IP: %s.", p.CHAddr().String(), client.IP)
 			return dhcp.ReplyPacket(p, dhcp.Offer, h.ip, net.ParseIP(client.IP), h.leaseDuration,
 				h.options.SelectOrderOrAll(options[dhcp.OptionParameterRequestList]))
