@@ -38,8 +38,10 @@ type Client struct {
 
 var DB *Clients
 var Config *GlobalOptions
+var ConfigPath string
 
 func Init(configPath string) error {
+	ConfigPath = configPath
 	content := []byte(`{}`)
 	dataFile := path.Join(configPath, "rest-dhcpd-clients.json")
 	_, err := os.Stat(dataFile)
@@ -75,7 +77,7 @@ func (m *Mu) Save() error {
 		log.Printf("%s", err)
 	}
 	m.Mu.Lock()
-	err = os.WriteFile("rest-dhcpd-clients.json", content, 0644)
+	err = os.WriteFile(path.Join(ConfigPath, "rest-dhcpd-clients.json"), content, 0644)
 	m.Mu.Unlock()
 	return err
 }
