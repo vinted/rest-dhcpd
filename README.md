@@ -46,6 +46,7 @@ REST API supports following methods:
 ### API endpoints
 
 `/` - supports `GET` method. Displays index page.  
+`/metrics` - supports `GET` method. Displays prometheus metrics.  
 `/clients` - supports `GET` method. Lists all configured clients.  
 `/client/AA:BB:CC:DD:EE:FF` - supports:  
 		- `GET` - displays configuration of a client defined by `AA:BB:CC:DD:EE:FF` `MAC` address.  

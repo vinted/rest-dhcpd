@@ -6,6 +6,7 @@ import (
 	"github.com/krolaw/dhcp4/conn"
 	"github.com/samber/lo"
 	"github.com/vinted/rest-dhcpd/pkg/configdb"
+	"github.com/vinted/rest-dhcpd/pkg/prometheus"
 	"github.com/vinted/rest-dhcpd/pkg/rest"
 	"log"
 	"net"
@@ -76,17 +77,21 @@ func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options
 
 	case dhcp.Discover:
 		log.Printf("DHCPDISCOVER from %s", p.CHAddr().String())
+		prometheus.UpdateDHCPDiscover()
 		client, id := rest.SearchForClientByMac(p.CHAddr().String())
 		if id != -1 { // If client exists in configdb, send a DHCPOFFER
 			h.options = lo.Assign(h.options, BuildOptions(client.Options)) // Merge global and client DHCP options
 			h.options[dhcp.OptionHostName] = []byte(client.Hostname)       // Set hostname via DHCP options
 			log.Printf("Sending DHCPOFFER to %s with IP: %s.", p.CHAddr().String(), client.IP)
+			prometheus.UpdateDHCPOffer()
 			return dhcp.ReplyPacket(p, dhcp.Offer, h.ip, net.ParseIP(client.IP), h.leaseDuration,
 				h.options.SelectOrderOrAll(options[dhcp.OptionParameterRequestList]))
 		} else {
 			log.Printf("Server %s is not in configdb.", p.CHAddr().String())
+			prometheus.UpdateDHCPNoSuchLease()
 		}
 	case dhcp.Request:
+		prometheus.UpdateDHCPRequest()
 		if server, ok := options[dhcp.OptionServerIdentifier]; ok && !net.IP(server).Equal(h.ip) {
 			return nil // Message not for this dhcp server
 		}
@@ -99,14 +104,17 @@ func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options
 			log.Printf("DHCPREQUEST from %s: IP: %s.", p.CHAddr().String(), reqIP.String())
 			if client.IP == reqIP.String() {
 				log.Printf("Sending DHCPACK to %s with IP: %s.", p.CHAddr().String(), reqIP.String())
+				prometheus.UpdateDHCPACK()
 				return dhcp.ReplyPacket(p, dhcp.ACK, h.ip, reqIP, h.leaseDuration,
 					h.options.SelectOrderOrAll(options[dhcp.OptionParameterRequestList]))
 			} else {
 				log.Printf("Requested IP %s from %s does not match configdb, sending NAK.", reqIP.String(), p.CHAddr().String())
+				prometheus.UpdateDHCPNAK()
 				return dhcp.ReplyPacket(p, dhcp.NAK, h.ip, nil, 0, nil)
 			}
 		} else {
 			log.Printf("Server %s is not in configdb.", p.CHAddr().String())
+			prometheus.UpdateDHCPNoSuchLease()
 		}
 	case dhcp.Release:
 		log.Printf("DHCPRELEASE from %s. Ignoring.", p.CHAddr().String())

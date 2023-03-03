@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vinted/rest-dhcpd/pkg/configdb"
 	"log"
 	"net/http"
@@ -184,6 +185,12 @@ func configToJson(config configdb.Client) []byte {
 	return cfg
 }
 
+func promMetrics(h http.Handler) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		h.ServeHTTP(w, r)
+	}
+}
+
 func StartServer() {
 	router := httprouter.New()
 	router.GET("/", index)
@@ -191,6 +198,7 @@ func StartServer() {
 	router.GET("/client/:mac", clientConfigShow)
 	router.PUT("/client/:mac", clientConfigAdd)
 	router.DELETE("/client/:mac", clientConfigDelete)
+	router.GET("/metrics", promMetrics(promhttp.Handler()))
 	if configdb.Config.TLSEnabled {
 		log.Fatal(http.ListenAndServeTLS(configdb.Config.HTTPListenAddress, configdb.Config.TLSCertificateFile, configdb.Config.TLSPrivateKeyFile, router))
 	} else {
