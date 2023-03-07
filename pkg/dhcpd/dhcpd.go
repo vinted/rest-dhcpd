@@ -39,7 +39,7 @@ var data_type = map[int]string{
 func StartServer() {
 	lease, _ := time.ParseDuration(strconv.Itoa(configdb.Config.LeaseDuration) + "s")
 	handler := &DHCPHandler{
-		ip:            net.ParseIP(configdb.Config.IP),
+		ip:            net.ParseIP(configdb.Config.IP).To4(),
 		leaseDuration: lease,
 		options:       BuildOptions(configdb.Config.Options),
 	}
