@@ -29,7 +29,7 @@ Global server configuration is stored in `rest-dhcpd-config.json` file:
 `AuthToken` - authentication token for REST interface.  
 `ListenInterface` - network interface to listen fro DHCP requests.  
 `HTTPListenAddress` - address to listen fro HTTP requests. To listen on all network addresses use port without any IP address `:6767`.  
-`TLSEndabled` - start REST interface with HTTPS support.  
+`TLSEnabled` - start REST interface with HTTPS support.  
 `TLSPrivateKeyFile` - private key file for HTTPS support.  
 `TLSCertificateFile` - certificate file for HTTPS support.  
 `Options` - list of global DHCP options. Can be overridden by client config.  
