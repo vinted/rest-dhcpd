@@ -4,8 +4,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.test
-    volumes:
-      - ~/.ssh:/root/.ssh:ro
     command: >
       sh -c "set -o pipefail &&
              go mod download &&
