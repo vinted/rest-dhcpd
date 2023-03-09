@@ -2,11 +2,11 @@ package main
 
 import (
 	"flag"
+	"log"
+
 	"github.com/vinted/rest-dhcpd/pkg/configdb"
 	"github.com/vinted/rest-dhcpd/pkg/dhcpd"
 	"github.com/vinted/rest-dhcpd/pkg/rest"
-	"log"
-	"os"
 )
 
 func main() {
@@ -15,8 +15,7 @@ func main() {
 	flag.Parse()
 	err := configdb.Init(configPath)
 	if err != nil {
-		log.Fatal("Failed to read configuration. %w", err)
-		os.Exit(1)
+		log.Fatalf("Failed to read configuration. %v", err)
 	}
 	go rest.StartServer()
 	dhcpd.StartServer()
