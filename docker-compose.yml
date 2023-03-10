@@ -5,7 +5,6 @@ services:
       context: .
       dockerfile: Dockerfile.test
     command: >
-      sh -c "set -o pipefail &&
-             go mod download &&
+      sh -c "go mod download &&
              ./bin/golangci-lint run -v &&
              go test ./..."
