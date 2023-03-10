@@ -36,14 +36,21 @@ type Client struct {
 	Options  interface{}
 }
 
-var DB *Clients
-var Config *GlobalOptions
-var ConfigPath string
+const (
+	configFilename  = "rest-dhcpd-config.json"
+	clientsFilename = "rest-dhcpd-clients.json"
+)
+
+var (
+	DB         *Clients
+	Config     *GlobalOptions
+	ConfigPath string
+)
 
 func Init(configPath string) error {
 	ConfigPath = configPath
 	content := []byte(`{}`)
-	dataFile := path.Join(configPath, "rest-dhcpd-clients.json")
+	dataFile := path.Join(configPath, clientsFilename)
 	_, err := os.Stat(dataFile)
 	if !os.IsNotExist(err) {
 		content, err = os.ReadFile(dataFile)
@@ -59,7 +66,7 @@ func Init(configPath string) error {
 		return err
 	}
 
-	cfg, err := os.ReadFile(path.Join(configPath, "rest-dhcpd-config.json"))
+	cfg, err := os.ReadFile(path.Join(configPath, configFilename))
 	if err != nil {
 		return err
 	}
@@ -77,7 +84,7 @@ func (m *Mu) Save() error {
 		log.Printf("%s", err)
 	}
 	m.Mu.Lock()
-	err = os.WriteFile(path.Join(ConfigPath, "rest-dhcpd-clients.json"), content, 0644)
+	err = os.WriteFile(path.Join(ConfigPath, clientsFilename), content, 0644)
 	m.Mu.Unlock()
 	return err
 }
