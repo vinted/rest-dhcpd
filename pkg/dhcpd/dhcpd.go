@@ -2,17 +2,18 @@ package dhcpd
 
 import (
 	"fmt"
+	"log"
+	"net"
+	"reflect"
+	"strconv"
+	"time"
+
 	dhcp "github.com/krolaw/dhcp4"
 	"github.com/krolaw/dhcp4/conn"
 	"github.com/samber/lo"
 	"github.com/vinted/rest-dhcpd/pkg/configdb"
 	"github.com/vinted/rest-dhcpd/pkg/prometheus"
 	"github.com/vinted/rest-dhcpd/pkg/rest"
-	"log"
-	"net"
-	"reflect"
-	"strconv"
-	"time"
 )
 
 type DHCPHandler struct {
@@ -45,7 +46,7 @@ func StartServer() {
 	}
 	cn, err := conn.NewUDP4BoundListener(configdb.Config.ListenInterface, ":67")
 	if err != nil {
-		log.Fatal("Failed to bind to interface. %w", err)
+		log.Fatalf("Failed to bind to interface. %v", err)
 	}
 	log.Fatal(dhcp.Serve(cn, handler))
 }
