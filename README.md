@@ -3,7 +3,7 @@ DHCP server controlled via REST endpoints.
 
 ## Configuration
 
-By default configuration files are located in `/etc/rest-dchp` directory.
+By default configuration files are located in `/etc/rest-dhcpd` directory.
 This can be overridden with `-configPath` command-line argument.
 Global server configuration is stored in `rest-dhcpd-config.json` file:
 
