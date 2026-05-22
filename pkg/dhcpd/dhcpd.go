@@ -17,6 +17,7 @@ import (
 )
 
 type DHCPHandler struct {
+	interfaceName string
 	ip            net.IP
 	leaseDuration time.Duration
 	options       dhcp.Options
@@ -38,22 +39,38 @@ var data_type = map[int]string{
 }
 
 func StartServer() {
-	lease, _ := time.ParseDuration(strconv.Itoa(configdb.Config.LeaseDuration) + "s")
-	handler := &DHCPHandler{
-		ip:            net.ParseIP(configdb.Config.IP).To4(),
-		leaseDuration: lease,
-		options:       BuildOptions(configdb.Config.Options),
+	globalOptions := BuildOptions(configdb.Config.Options)
+	errCh := make(chan error, len(configdb.Config.Interfaces))
+
+	for _, iface := range configdb.Config.Interfaces {
+		lease, _ := time.ParseDuration(strconv.Itoa(iface.LeaseDuration) + "s")
+		handler := &DHCPHandler{
+			interfaceName: iface.Name,
+			ip:            net.ParseIP(iface.IP).To4(),
+			leaseDuration: lease,
+			options:       lo.Assign(globalOptions, BuildOptions(iface.Options)),
+		}
+		cn, err := conn.NewUDP4BoundListener(iface.Name, ":67")
+		if err != nil {
+			log.Fatalf("Failed to bind to interface %s: %v", iface.Name, err)
+		}
+		log.Printf("[%s] Listening for DHCP requests (server IP %s).", iface.Name, handler.ip)
+		go func(name string) {
+			errCh <- fmt.Errorf("[%s] serve exited: %w", name, dhcp.Serve(cn, handler))
+		}(iface.Name)
 	}
-	cn, err := conn.NewUDP4BoundListener(configdb.Config.ListenInterface, ":67")
-	if err != nil {
-		log.Fatalf("Failed to bind to interface. %v", err)
-	}
-	log.Fatal(dhcp.Serve(cn, handler))
+	log.Fatal(<-errCh)
 }
 
 func BuildOptions(options interface{}) dhcp.Options {
-	opt := options.(map[string]interface{})
 	dhcp_opt := dhcp.Options{}
+	if options == nil {
+		return dhcp_opt
+	}
+	opt, ok := options.(map[string]interface{})
+	if !ok {
+		return dhcp_opt
+	}
 	for key, value := range opt {
 		var val []byte
 		id, _ := strconv.Atoi(key)
@@ -77,18 +94,18 @@ func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options
 	switch msgType {
 
 	case dhcp.Discover:
-		log.Printf("DHCPDISCOVER from %s", p.CHAddr().String())
+		log.Printf("[%s] DHCPDISCOVER from %s", h.interfaceName, p.CHAddr().String())
 		prometheus.UpdateDHCPDiscover()
 		client, id := rest.SearchForClientByMac(p.CHAddr().String())
 		if id != -1 { // If client exists in configdb, send a DHCPOFFER
-			h.options = lo.Assign(h.options, BuildOptions(client.Options)) // Merge global and client DHCP options
-			h.options[dhcp.OptionHostName] = []byte(client.Hostname)       // Set hostname via DHCP options
-			log.Printf("Sending DHCPOFFER to %s with IP: %s.", p.CHAddr().String(), client.IP)
+			var reqOptions dhcp.Options = lo.Assign(h.options, BuildOptions(client.Options))
+			reqOptions[dhcp.OptionHostName] = []byte(client.Hostname)
+			log.Printf("[%s] Sending DHCPOFFER to %s with IP: %s.", h.interfaceName, p.CHAddr().String(), client.IP)
 			prometheus.UpdateDHCPOffer()
 			return dhcp.ReplyPacket(p, dhcp.Offer, h.ip, net.ParseIP(client.IP), h.leaseDuration,
-				h.options.SelectOrderOrAll(options[dhcp.OptionParameterRequestList]))
+				reqOptions.SelectOrderOrAll(options[dhcp.OptionParameterRequestList]))
 		} else {
-			log.Printf("Server %s is not in configdb.", p.CHAddr().String())
+			log.Printf("[%s] Client %s is not in configdb.", h.interfaceName, p.CHAddr().String())
 			prometheus.UpdateDHCPNoSuchLease()
 		}
 	case dhcp.Request:
@@ -102,25 +119,27 @@ func (h *DHCPHandler) ServeDHCP(p dhcp.Packet, msgType dhcp.MessageType, options
 			if reqIP == nil { // DHCPREQUEST does not have IP address if it's a lease renew. IP address is set in CIADDR space instead.
 				reqIP = net.IP(p.CIAddr())
 			}
-			log.Printf("DHCPREQUEST from %s: IP: %s.", p.CHAddr().String(), reqIP.String())
+			log.Printf("[%s] DHCPREQUEST from %s: IP: %s.", h.interfaceName, p.CHAddr().String(), reqIP.String())
 			if client.IP == reqIP.String() {
-				log.Printf("Sending DHCPACK to %s with IP: %s.", p.CHAddr().String(), reqIP.String())
+				var reqOptions dhcp.Options = lo.Assign(h.options, BuildOptions(client.Options))
+				reqOptions[dhcp.OptionHostName] = []byte(client.Hostname)
+				log.Printf("[%s] Sending DHCPACK to %s with IP: %s.", h.interfaceName, p.CHAddr().String(), reqIP.String())
 				prometheus.UpdateDHCPACK()
 				return dhcp.ReplyPacket(p, dhcp.ACK, h.ip, reqIP, h.leaseDuration,
-					h.options.SelectOrderOrAll(options[dhcp.OptionParameterRequestList]))
+					reqOptions.SelectOrderOrAll(options[dhcp.OptionParameterRequestList]))
 			} else {
-				log.Printf("Requested IP %s from %s does not match configdb, sending NAK.", reqIP.String(), p.CHAddr().String())
+				log.Printf("[%s] Requested IP %s from %s does not match configdb, sending NAK.", h.interfaceName, reqIP.String(), p.CHAddr().String())
 				prometheus.UpdateDHCPNAK()
 				return dhcp.ReplyPacket(p, dhcp.NAK, h.ip, nil, 0, nil)
 			}
 		} else {
-			log.Printf("Server %s is not in configdb.", p.CHAddr().String())
+			log.Printf("[%s] Client %s is not in configdb.", h.interfaceName, p.CHAddr().String())
 			prometheus.UpdateDHCPNoSuchLease()
 		}
 	case dhcp.Release:
-		log.Printf("DHCPRELEASE from %s. Ignoring.", p.CHAddr().String())
+		log.Printf("[%s] DHCPRELEASE from %s. Ignoring.", h.interfaceName, p.CHAddr().String())
 	case dhcp.Decline:
-		log.Printf("DHCPDECLINE from %s. Ignoring.", p.CHAddr().String())
+		log.Printf("[%s] DHCPDECLINE from %s. Ignoring.", h.interfaceName, p.CHAddr().String())
 	}
 	return nil
 }

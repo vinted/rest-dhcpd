@@ -1,15 +1,30 @@
 {
-    "IP": "192.168.100.1",
     "LeaseDuration": 30,
     "AuthToken": "secretToken",
-    "ListenInterface": "virbr1",
     "HTTPListenAddress": "127.0.0.1:6767",
     "TLSEnabled": true,
     "TLSPrivateKeyFile": "example.key",
     "TLSCertificateFile": "example.crt",
     "Options": {
-      "1": "255.255.255.0",
-      "3": "192.168.100.1",
       "6": ["1.1.1.1", "8.8.8.8"]
-    }
+    },
+    "Interfaces": [
+      {
+        "Name": "virbr1",
+        "IP": "192.168.100.1",
+        "Options": {
+          "1": "255.255.255.0",
+          "3": "192.168.100.1"
+        }
+      },
+      {
+        "Name": "virbr2",
+        "IP": "10.0.0.1",
+        "LeaseDuration": 3600,
+        "Options": {
+          "1": "255.255.0.0",
+          "3": "10.0.0.1"
+        }
+      }
+    ]
 }
