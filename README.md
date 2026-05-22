@@ -9,30 +9,56 @@ Global server configuration is stored in `rest-dhcpd-config.json` file:
 
 ```
 {
-    "IP": "192.168.100.1",
     "LeaseDuration": 30,
     "AuthToken": "secretToken",
-    "ListenInterface": "virbr1",
     "HTTPListenAddress": "127.0.0.1:6767",
     "TLSEnabled": true,
     "TLSPrivateKeyFile": "example.key",
     "TLSCertificateFile": "example.crt",
     "Options": {
-      "1": "255.255.255.0",
-      "3": "192.168.100.1",
-      "6": "10.32.0.3"
-    }
+      "6": ["1.1.1.1", "8.8.8.8"]
+    },
+    "Interfaces": [
+      {
+        "Name": "virbr1",
+        "IP": "192.168.100.1",
+        "Options": {
+          "1": "255.255.255.0",
+          "3": "192.168.100.1"
+        }
+      },
+      {
+        "Name": "virbr2",
+        "IP": "10.0.0.1",
+        "LeaseDuration": 3600,
+        "Options": {
+          "1": "255.255.0.0",
+          "3": "10.0.0.1"
+        }
+      }
+    ]
 }
 ```
-`IP` - IP address of DHCP server.  
-`LeaseDuration` - DHCP lease duration in seconds.  
-`AuthToken` - authentication token for REST interface.  
-`ListenInterface` - network interface to listen fro DHCP requests.  
-`HTTPListenAddress` - address to listen fro HTTP requests. To listen on all network addresses use port without any IP address `:6767`.  
-`TLSEnabled` - start REST interface with HTTPS support.  
-`TLSPrivateKeyFile` - private key file for HTTPS support.  
-`TLSCertificateFile` - certificate file for HTTPS support.  
-`Options` - list of global DHCP options. Can be overridden by client config.  
+
+- `LeaseDuration` - default DHCP lease duration in seconds. Used by any interface that does not set its own.
+- `AuthToken` - authentication token for REST interface.
+- `HTTPListenAddress` - address to listen for HTTP requests. To listen on all network addresses use port without any IP address `:6767`.
+- `TLSEnabled` - start REST interface with HTTPS support.
+- `TLSPrivateKeyFile` - private key file for HTTPS support.
+- `TLSCertificateFile` - certificate file for HTTPS support.
+- `Options` - top-level DHCP options applied to every interface as defaults. Per-interface `Options` override these per option key, and per-client `Options` override both.
+- `Interfaces` - list of interfaces to listen on. Must contain at least one entry. Each entry has:
+  - `Name` - network interface name (e.g. `virbr1`).
+  - `IP` - IP address of the DHCP server on this interface (used as the server identifier in responses).
+  - `LeaseDuration` - optional lease duration override for this interface. If omitted, the top-level value is used.
+  - `Options` - DHCP options specific to this subnet. Merged on top of the top-level `Options`.
+
+Requests are served by whichever interface received them; the response uses that interface's `IP` and its merged option set.
+
+#### Migration from single-interface configs
+If upgrading from a version with top-level `IP` and `ListenInterface`, move those values into a one-element `Interfaces` array along with the subnet-specific entries from `Options`. Any options shared across interfaces (e.g. DNS) can stay at the top level as defaults.
+
+For backwards compatibility, the legacy top-level `IP` and `ListenInterface` fields are still accepted: if `Interfaces` is omitted and these fields are set, a single-entry `Interfaces` array is synthesized from them at startup and a deprecation warning is logged. Configs that set both forms are rejected.
 
 ### Basics
 REST DHCP server does not provide dynamic DHCP leases. It only provides leases to configured clients.
