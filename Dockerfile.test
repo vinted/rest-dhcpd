@@ -1,4 +1,4 @@
-FROM golang:1.19.6-alpine3.17
+FROM golang:1.26.10-alpine3.23
 
 WORKDIR /code
 RUN apk --no-cache add gcc musl-dev && \

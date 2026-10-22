@@ -1,6 +1,6 @@
 module github.com/vinted/rest-dhcpd
 
-go 1.19
+go 1.26.10
 
 require github.com/krolaw/dhcp4 v0.0.0-20190909130307-a50d88189771
 
